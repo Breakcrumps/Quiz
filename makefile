@@ -13,4 +13,4 @@ all: $(TARGET)
 $(TARGET): $(SRC) quiz.c
 	$(CC) $(CFLAGS) -fwhole-program $^ -o $(TARGET)
 phone: $(SRC) quiz.c
-	$(CPHONE) $(CPHONEFLAGS) -fwhole-program $^ -o $(TARGET)
+	$(CPHONE) $(CPHONEFLAGS) $^ -o $(TARGET)
