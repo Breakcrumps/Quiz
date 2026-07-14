@@ -86,6 +86,50 @@ void write_quiz_file(QuizFile quiz_file, FILE *fp)
   }
 }
 
+void print_participant(QuizFile quiz_file, int idx)
+{
+  printf(" -- Participant %hu:\n", idx);
+
+  for (u16 j = 0; j < TEST_QUESTION_COUNT; j++)
+  {
+    int answer_code = (quiz_file.records[idx - 1].test_answers[j >> 2] >> ((j & 0x3) << 1)) & 0x3;
+    char *comment = (
+      answer_code == UNDECIDED_CODE ? "Undecided"
+      : answer_code == LEFT_CODE ? "Left"
+      : answer_code == RIGHT_CODE ? "Right"
+      : "ERROR"
+    );
+    printf("\t -- Test question %hu:\n", j + 1);
+    printf("\t\t -- Question: %s\n", test_questions[j]);
+    printf("\t\t -- Answer: %s\n", comment);
+  }
+
+  for (u16 j = 0; j < LONG_QUESTION_COUNT; j++)
+  {
+    int answer_code = (quiz_file.records[idx - 1].long_verdicts[j >> 2] >> ((j & 0x3) << 1)) & 0x3;
+    char *comment = (
+      answer_code == UNDECIDED_CODE ? "Undecided"
+      : answer_code == LEFT_CODE ? "Left"
+      : answer_code == RIGHT_CODE ? "Right"
+      : "ERROR"
+    );
+    printf("\t -- Long question %hu:\n", j + 1);
+    printf("\t\t -- Question: %s\n", long_questions[j]);
+    printf("\t\t -- Answer: %s\n", comment);
+    printf("\t\t -- Text: %s\n", quiz_file.records[idx - 1].long_answers[j]);
+  }
+
+  printf("\t -- Note: %s\n", quiz_file.records[idx - 1].note ? quiz_file.records[idx - 1].note : "None");
+}
+
+void print_participants(QuizFile quiz_file)
+{
+  for (int i = 1 ; i <= quiz_file.record_count; i++)
+  {
+    print_participant(quiz_file, i);
+  }
+}
+
 void print_quiz_file(QuizFile quiz_file, const char filename[])
 {
   printf("\t-- %s --\n\n", filename);
@@ -93,42 +137,6 @@ void print_quiz_file(QuizFile quiz_file, const char filename[])
   printf("%hu\n", quiz_file.record_count);
   fputs(" -- Reject count: ", stdout);
   printf("%hu\n", quiz_file.reject_count);
-  
-  for (u16 i = 0; i < quiz_file.record_count; i++)
-  {
-    printf("\t -- Participant %hu:\n", i + 1);
-
-    for (u16 j = 0; j < TEST_QUESTION_COUNT; j++)
-    {
-      int answer_code = (quiz_file.records[i].test_answers[j >> 2] >> ((j & 0x3) << 1)) & 0x3;
-      char *comment = (
-        answer_code == UNDECIDED_CODE ? "Undecided"
-        : answer_code == LEFT_CODE ? "Left"
-        : answer_code == RIGHT_CODE ? "Right"
-        : "ERROR"
-      );
-      printf("\t\t -- Test question %hu:\n", j);
-      printf("\t\t\t -- Question: %s\n", test_questions[j]);
-      printf("\t\t\t -- Answer: %s\n", comment);
-    }
-
-    for (u16 j = 0; j < LONG_QUESTION_COUNT; j++)
-    {
-      int answer_code = (quiz_file.records[i].long_verdicts[j >> 2] >> ((j & 0x3) << 1)) & 0x3;
-      char *comment = (
-        answer_code == UNDECIDED_CODE ? "Undecided"
-        : answer_code == LEFT_CODE ? "Left"
-        : answer_code == RIGHT_CODE ? "Right"
-        : "ERROR"
-      );
-      printf("\t\t -- Test question %hu:\n", j);
-      printf("\t\t\t -- Question: %s\n", long_questions[j]);
-      printf("\t\t\t -- Answer: %s\n", comment);
-      printf("\t\t\t -- Text: %s\n", quiz_file.records[i].long_answers[j]);
-    }
-
-    printf("\t\t -- Note: %s\n", quiz_file.records[i].note ? quiz_file.records[i].note : "None");
-  }
-
+  print_participants(quiz_file);
   putchar('\n');
 }

@@ -1,6 +1,7 @@
 #include "../include/strategies.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../include/questions.h"
 #include "../include/console.h"
 #include "../include/filename.h"
@@ -33,16 +34,15 @@ void initialize_file_mode()
 
 static inline void add_entry(QuizFile *quiz_file)
 {
-  Record *temp = realloc(quiz_file->records, (quiz_file->record_count + 1) * sizeof(Record));
-
+  Record *temp = malloc((quiz_file->record_count + 1) * sizeof(Record));
+  
   if (!temp)
   {
     alloc_error();
     return;
   }
 
-  quiz_file->record_count++;
-  quiz_file->records = temp;
+  memcpy(temp, quiz_file->records, quiz_file->record_count * sizeof(Record));
 
   for (int i = 0; i < TEST_QUESTION_COUNT; i++)
   {
@@ -50,7 +50,7 @@ static inline void add_entry(QuizFile *quiz_file)
     {
       clear_console();
       int answer;
-      printf("Test question %d (%d for left, %d for undecided, %d for right)\n", i, LEFT_CODE, UNDECIDED_CODE, RIGHT_CODE);
+      printf("Test question %d (%d for left, %d for undecided, %d for right, -1 to return)\n", i + 1, LEFT_CODE, UNDECIDED_CODE, RIGHT_CODE);
       printf(" -- Question: %s\n", test_questions[i]);
       fputs(" -- Answer code: ", stdout);
       
@@ -60,38 +60,47 @@ static inline void add_entry(QuizFile *quiz_file)
         continue;
       }
 
+      if (answer == -1)
+      {
+        free(temp);
+        return;
+      }
+
       if (answer != LEFT_CODE && answer != RIGHT_CODE && answer != UNDECIDED_CODE)
       {
         invalid_option();
         continue;
       }
   
-      quiz_file->records[quiz_file->record_count - 1].test_answers[i >> 2] &= ~(0x3 << ((i & 0x3) << 1));
-      quiz_file->records[quiz_file->record_count - 1].test_answers[i >> 2] |= answer << ((i & 0x3) << 1);
+      temp[quiz_file->record_count].test_answers[i >> 2] &= ~(0x3 << ((i & 0x3) << 1));
+      temp[quiz_file->record_count].test_answers[i >> 2] |= answer << ((i & 0x3) << 1);
       break;
     }
   }
 
   for (int i = 0; i < LONG_QUESTION_COUNT; i++)
   {
-    clear_console();
-    int answer;
-    printf("Long question %d (%d for left, %d for undecided, %d for right)\n", i, LEFT_CODE, UNDECIDED_CODE, RIGHT_CODE);
-    printf(" -- Question: %s\n", long_questions[i]);
-    fputs(" -- Answer code: ", stdout);
-    
-    if (scanf("%d", &answer) != 1)
+    while (1)
     {
-      quiz_file->record_count--;
-      scanf_fail();
-      return;
+      clear_console();
+      int answer;
+      printf("Long question %d (%d for left, %d for undecided, %d for right, -1 to return)\n", i, LEFT_CODE, UNDECIDED_CODE, RIGHT_CODE);
+      printf(" -- Question: %s\n", long_questions[i]);
+      fputs(" -- Answer code: ", stdout);
+      
+      if (scanf("%d", &answer) != 1)
+      {
+        scanf_fail();
+        continue;
+      }
+  
+      temp[quiz_file->record_count].long_verdicts[i >> 2] &= ~(0x3 << ((i & 0x3) << 1));
+      temp[quiz_file->record_count].long_verdicts[i >> 2] |= answer << ((i & 0x3) << 1);
+  
+      fputs(" -- Answer body: ", stdout);
+      temp[quiz_file->record_count].long_answers[i] = read_str_dynamic();
+      break;
     }
-
-    quiz_file->records[quiz_file->record_count - 1].long_verdicts[i >> 2] &= ~(0x3 << ((i & 0x3) << 1));
-    quiz_file->records[quiz_file->record_count - 1].long_verdicts[i >> 2] |= answer << ((i & 0x3) << 1);
-
-    fputs(" -- Answer body: ", stdout);
-    quiz_file->records[quiz_file->record_count - 1].long_answers[i] = read_str_dynamic();
   }
 
   clear_console();
@@ -110,14 +119,17 @@ static inline void add_entry(QuizFile *quiz_file)
     clear_console();
     puts(" -- Enter the note:");
     char *note = read_str_dynamic();
-    quiz_file->records[quiz_file->record_count - 1].note = note;
+    temp[quiz_file->record_count].note = note;
     clear_console();
-    puts(note ? " -- Note Saved!\n" : "-- Failed to retrieve the note!\n");
   }
   else if (option != 0)
   {
     invalid_option();
   }
+
+  quiz_file->record_count++;
+  free(quiz_file->records);
+  quiz_file->records = temp;
 }
 
 static inline void remove_entry(QuizFile *quiz_file, int idx)
@@ -181,7 +193,7 @@ void edit_file_mode()
   {
     puts("/------------------\n|--EDIT-OPTIONS----\n\\------------------\n");
     printf("\t-- File: %s --\n\n", filename);
-    puts(" -- 1. Check file contents.\n -- 2. Add an entry.\n -- 3. Remove an entry.\n -- -1. Exit edit mode. (CLOSE SUBMENU)");
+    puts(" -- 1. Check file contents.\n -- 2. Add an entry.\n -- 3. Edit an entry\n -- 4. Remove an entry.\n -- -1. Exit edit mode. (CLOSE SUBMENU)");
 
     int option;
   
@@ -223,6 +235,7 @@ void edit_file_mode()
 
         write_quiz_file(quiz_file, fp);
         fclose(fp);
+        puts(" -- Added an entry!\n");
       }
       else if (option == 1)
       {
@@ -238,6 +251,7 @@ void edit_file_mode()
 
         write_quiz_file(quiz_file, fp);
         fclose(fp);
+        puts(" -- Added a reject!\n");
       }
       else if (option == -1)
       {
@@ -246,7 +260,6 @@ void edit_file_mode()
       }
       else
       {
-        clear_console();
         invalid_option();
         continue;
       }
@@ -254,12 +267,195 @@ void edit_file_mode()
     else if (option == 3)
     {
       clear_console();
+      print_participants(quiz_file);
+      puts("Which participant to edit? (-1 to return)");
+      
+      int participant_idx;
+
+      if (scanf("%d", &participant_idx) != 1)
+      {
+        scanf_fail();
+        continue;
+      }
+
+      if (participant_idx == -1)
+      {
+        clear_console();
+        continue;
+      }
+
+      if (participant_idx < 1 || participant_idx > quiz_file.record_count)
+      {
+        invalid_option();
+        continue;
+      }
+
+      clear_console();
+      print_participant(quiz_file, participant_idx);
+
+      puts("Which block to edit? (0 for test, 1 for long, 2 for note, -1 to return)");
+
+      int mode, question_idx;
+
+      if (scanf("%d", &mode) != 1)
+      {
+        scanf_fail();
+        continue;
+      }
+
+      if (mode == -1)
+      {
+        clear_console();
+        continue;
+      }
+
+      if (mode < 0 || mode > 2)
+      {
+        invalid_option();
+        continue;
+      }
+
+      if (mode == 2)
+      {
+        clear_console();
+        puts("Enter note: (-1 to return)");
+        char *new_note = read_str_dynamic();
+
+        if (!new_note)
+        {
+          alloc_error();
+          continue;
+        }
+
+        if (new_note[0] == '-' && new_note[1] == '1')
+        {
+          free(new_note);
+          continue;
+        }
+
+        free(quiz_file.records[participant_idx - 1].note);
+        quiz_file.records[participant_idx - 1].note = new_note;
+        clear_console();
+      }
+      else
+      {
+        puts("Enter the question number: (-1 to return)");
+  
+        if (scanf("%d", &question_idx) != 1)
+        {
+          scanf_fail();
+          continue;
+        }
+  
+        if (question_idx == -1)
+        {
+          clear_console();
+          continue;
+        }
+  
+        if (question_idx < 1)
+        {
+          invalid_option();
+          continue;
+        }
+  
+        if (mode == 0)
+        {
+          if (question_idx > TEST_QUESTION_COUNT)
+          {
+            invalid_option();
+            continue;
+          }
+  
+          clear_console();
+          int answer;
+          printf(
+            "Test question %d (%d for left, %d for undecided, %d for right, -1 to return)\n",
+            question_idx, LEFT_CODE, UNDECIDED_CODE, RIGHT_CODE
+          );
+          printf(" -- Question: %s\n", test_questions[question_idx - 1]);
+          fputs(" -- Answer code: ", stdout);
+          
+          if (scanf("%d", &answer) != 1)
+          {
+            scanf_fail();
+            continue;
+          }
+  
+          if (answer == -1)
+          {
+            clear_console;
+            continue;
+          }
+  
+          if (answer != LEFT_CODE && answer != RIGHT_CODE && answer != UNDECIDED_CODE)
+          {
+            invalid_option();
+            continue;
+          }
+      
+          quiz_file.records[participant_idx - 1].test_answers[(question_idx - 1) >> 2] &= ~(0x3 << (((question_idx - 1) & 0x3) << 1));
+          quiz_file.records[participant_idx - 1].test_answers[(question_idx - 1) >> 2] |= answer << (((question_idx - 1) & 0x3) << 1);
+        }
+        else if (mode == 1)
+        {
+          if (question_idx > LONG_QUESTION_COUNT)
+          {
+            invalid_option();
+            continue;
+          }
+          
+          clear_console();
+          int answer;
+          printf(
+            "Long question %d (%d for left, %d for undecided, %d for right, -1 to return)\n",
+            question_idx, LEFT_CODE, UNDECIDED_CODE, RIGHT_CODE
+          );
+          printf(" -- Question: %s\n", long_questions[question_idx - 1]);
+          fputs(" -- Answer code: ", stdout);
+          
+          if (scanf("%d", &answer) != 1)
+          {
+            scanf_fail();
+            continue;
+          }
+      
+          quiz_file.records[participant_idx - 1].long_verdicts[(question_idx - 1) >> 2] &= ~(0x3 << (((question_idx - 1) & 0x3) << 1));
+          quiz_file.records[participant_idx - 1].long_verdicts[(question_idx - 1) >> 2] |= answer << (((question_idx - 1) & 0x3) << 1);
+      
+          fputs(" -- Answer body: ", stdout);
+          quiz_file.records[participant_idx - 1].long_answers[question_idx - 1] = read_str_dynamic();
+        }
+      }
+
+      FILE *fp = fopen(filename, "wb");
+
+      if (!fp)
+      {
+        file_error();
+        continue;
+      }
+
+      write_quiz_file(quiz_file, fp);
+      fclose(fp);
+      clear_console();
+      
+      if (mode == 0)
+        printf(" -- Updated test question %d on participant %d!\n\n", question_idx, participant_idx);
+      else if (mode == 1)
+        printf(" -- Updated long question %d on participant %d!\n\n", question_idx, participant_idx);
+      else
+        printf(" -- Updated note on participant %d!\n\n", participant_idx);
+    }
+    else if (option == 4)
+    {
+      clear_console();
       if (quiz_file.record_count <= 0)
       {
         puts("No items in the quiz file!\n");
         continue;
       }
-      puts("Which participant to remove? (1-indexed number, -1 to cancel)\n");
+      puts("Which participant to remove? (1-indexed number, 0 to remove reject, -1 to cancel)\n");
       print_quiz_file(quiz_file, filename);
       
       int remove_idx;
@@ -272,6 +468,23 @@ void edit_file_mode()
 
       if (remove_idx == -1)
         continue;
+
+      if (remove_idx == 0)
+      {
+        clear_console();
+
+        if (quiz_file.reject_count > 0)
+        {
+          quiz_file.record_count--;
+          puts(" -- Removed a reject!");
+        }
+        else
+        {
+          puts(" -- No rejects to remove.");
+        }
+
+        continue;
+      }
       
       if (remove_idx < 1 || remove_idx >= quiz_file.record_count + 1)
       {
