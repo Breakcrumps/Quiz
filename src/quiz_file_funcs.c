@@ -1,9 +1,9 @@
 #include "../include/quiz_file_funcs.h"
 #include <stdlib.h>
 #include <string.h>
-#include "../include/types.h"
 #include "../include/str.h"
 #include "../include/console.h"
+#include "../include/questions.h"
 
 void free_quiz_file(QuizFile quiz_file)
 {
@@ -13,6 +13,7 @@ void free_quiz_file(QuizFile quiz_file)
     {
       free(quiz_file.records[i].long_answers[j]);
     }
+
     free(quiz_file.records[i].note);
   }
 
@@ -75,13 +76,13 @@ void write_quiz_file(QuizFile quiz_file, FILE *fp)
     for (int j = 0; j < LONG_QUESTION_COUNT; j++)
     {
       char *long_ans = quiz_file.records[i].long_answers[j];
-      fwrite(long_ans, strlen(long_ans) + 1, 1, fp);
+      fwrite(long_ans, sizeof(char), strlen(long_ans) + 1, fp);
     }
 
     if (quiz_file.records[i].note)
-      fwrite(quiz_file.records[i].note, strlen(quiz_file.records[i].note) + 1, 1, fp);
+      fwrite(quiz_file.records[i].note, sizeof(char), strlen(quiz_file.records[i].note) + 1, fp);
     else
-      fwrite(&(u8){0}, 1, 1, fp);
+      fwrite(&(char){0}, sizeof(char), 1, fp);
   }
 }
 
@@ -106,7 +107,9 @@ void print_quiz_file(QuizFile quiz_file, const char filename[])
         : answer_code == RIGHT_CODE ? "Right"
         : "ERROR"
       );
-      printf("\t\t -- Test question %hu: %u (%s).\n", j, answer_code, comment);
+      printf("\t\t -- Test question %hu:\n", j);
+      printf("\t\t\t -- Question: %s\n", test_questions[j]);
+      printf("\t\t\t -- Answer: %s\n", comment);
     }
 
     for (u16 j = 0; j < LONG_QUESTION_COUNT; j++)
@@ -118,7 +121,10 @@ void print_quiz_file(QuizFile quiz_file, const char filename[])
         : answer_code == RIGHT_CODE ? "Right"
         : "ERROR"
       );
-      printf("\t\t -- Long question %hu: %u (%s). Text: %s\n", j, answer_code, comment, quiz_file.records[i].long_answers[j]);
+      printf("\t\t -- Test question %hu:\n", j);
+      printf("\t\t\t -- Question: %s\n", long_questions[j]);
+      printf("\t\t\t -- Answer: %s\n", comment);
+      printf("\t\t\t -- Text: %s\n", quiz_file.records[i].long_answers[j]);
     }
 
     printf("\t\t -- Note: %s\n", quiz_file.records[i].note ? quiz_file.records[i].note : "None");

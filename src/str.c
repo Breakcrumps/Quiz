@@ -18,6 +18,23 @@ void read_string(char str[], int max_size)
   str[i] = '\0';
 }
 
+void read_wstring(char str[], int max_size)
+{
+  int i = 0;
+  wint_t temp;
+
+  while ((temp = getwchar()) == '\n' || temp == '\r' || temp == ' ');
+
+  str[i++] = temp;
+  
+  while (i < max_size - 1 && (temp = getwchar()) != '\n' && temp != '\r' && temp != WEOF)
+  {
+    str[i] = temp;
+    i++;
+  }
+  str[i] = '\0';
+}
+
 char *read_str_dynamic()
 {
   int temp;
@@ -51,6 +68,39 @@ char *read_str_dynamic()
   return final_str ? final_str : str;
 }
 
+char *read_wstr_dynamic()
+{
+  wint_t temp;
+  while ((temp = getwchar()) == '\n' || temp == '\r' || temp == ' ');
+  
+  int cur_size = 1, max_size = 10;
+  char *str = malloc(max_size * sizeof(char));
+  str[0] = temp;
+
+  while (1)
+  {
+    if (cur_size == max_size)
+    {
+      char *temp = realloc(str, (max_size *= 2) * sizeof(char));
+
+      if (!temp)
+      {
+        free(str);
+        return NULL;
+      }
+
+      str = temp;
+    }
+
+    if ((str[cur_size++] = getwchar()) == '\n')
+      break;
+  }
+
+  str[cur_size - 1] = '\0';
+  char *final_str = realloc(str, cur_size * sizeof(char));
+  return final_str ? final_str : str;
+}
+
 char *fread_str_dynamic(FILE *fp)
 {
   int cur_size = 0, max_size = 10;
@@ -60,7 +110,7 @@ char *fread_str_dynamic(FILE *fp)
   {
     if (cur_size == max_size)
     {
-      char *temp = realloc(str, max_size *= 2);
+      char *temp = realloc(str, (max_size *= 2) * sizeof(char));
 
       if (!temp)
       {
@@ -88,5 +138,45 @@ char *fread_str_dynamic(FILE *fp)
   }
 
   char *final_str = realloc(str, cur_size);
+  return final_str ? final_str : str;
+}
+
+char *fread_wstr_dynamic(FILE *fp)
+{
+  int cur_size = 0, max_size = 10;
+  char *str = malloc(max_size * sizeof(char));
+
+  while (1)
+  {
+    if (cur_size == max_size)
+    {
+      char *temp = realloc(str, (max_size *= 2) * sizeof(char));
+
+      if (!temp)
+      {
+        free(str);
+        return NULL;
+      }
+
+      str = temp;
+    }
+
+    wint_t wc;
+    
+    if ((wc = fgetwc(fp)) == '\0')
+    {
+      str[cur_size++] = wc;
+      break;
+    }
+    else if (wc == WEOF)
+    {
+      str[cur_size++] = '\0';
+      break;
+    }
+
+    str[cur_size++] = wc;
+  }
+
+  char *final_str = realloc(str, cur_size * sizeof(char));
   return final_str ? final_str : str;
 }

@@ -1,9 +1,9 @@
 typedef unsigned char u8;
 typedef unsigned short u16;
 
-#define TEST_QUESTION_COUNT 1
+#define TEST_QUESTION_COUNT 2
 #define TEST_QUESTION_ARR_SIZE ((TEST_QUESTION_COUNT + 3) / 4)
-#define LONG_QUESTION_COUNT 1
+#define LONG_QUESTION_COUNT 2
 #define LONG_QUESTION_ARR_SIZE ((LONG_QUESTION_COUNT + 3) / 4)
 
 typedef enum answer_code
