@@ -384,7 +384,7 @@ void edit_file_mode()
   
           if (answer == -1)
           {
-            clear_console;
+            clear_console();
             continue;
           }
   
