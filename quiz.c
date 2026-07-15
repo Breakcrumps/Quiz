@@ -16,7 +16,21 @@ int main()
   #endif
 
   setlocale(LC_ALL, ".UTF8");
-  session_filename[0] = '\0';
+
+  FILE *fp = fopen("filename.dat", "rb");
+
+  if (!fp)
+  {
+    session_filename[0] = '\0';
+  }
+  else
+  {
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    fread(session_filename, sizeof(char), file_size, fp);
+    fclose(fp);
+  }
   
   clear_console();
   puts("/-------------------------------\\\n"
@@ -56,19 +70,37 @@ int main()
     {
       if (session_filename[0])
       {
+        int remove_code = remove("filename.dat");
         session_filename[0] = '\0';
+        clear_console();
+
+        if (remove_code != 0)
+          puts(" -- Couldn't clear persistent filename cache!\n");
       }
       else
       {
         clear_console();
         puts("Please enter the file name: (-1 to return)");
         read_string(session_filename, 4096);
+        clear_console();
 
         if (session_filename[0] == '-' && session_filename[1] == '1')
+        {
           session_filename[0] = '\0';
-      }
+          continue;
+        }
 
-      clear_console();
+        FILE *fp = fopen("filename.dat", "wb");
+
+        if (!fp)
+        {
+          puts(" -- Couldn't save session filename to persistent storage!\n");
+          continue;
+        }
+
+        fwrite(session_filename, sizeof(char), strlen(session_filename) + 1, fp);
+        fclose(fp);
+      }
     }
     else
     {
