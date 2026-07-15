@@ -32,25 +32,31 @@ void initialize_file_mode()
   printf(" -- Initialised file %s!\n\n", filename);
 }
 
-static inline void add_entry(QuizFile *quiz_file)
+static inline int add_entry(QuizFile *quiz_file)
 {
   Record *temp = malloc((quiz_file->record_count + 1) * sizeof(Record));
   
   if (!temp)
   {
     alloc_error();
-    return;
+    return 1;
   }
 
   memcpy(temp, quiz_file->records, quiz_file->record_count * sizeof(Record));
 
-  for (int i = 0; i < TEST_QUESTION_COUNT; i++)
+  int i;
+
+  for (i = 0; i < TEST_QUESTION_COUNT; i++)
   {
+test_question:
     while (1)
     {
       clear_console();
       int answer;
-      printf("Test question %d (%d for left, %d for undecided, %d for right, -1 to return)\n", i + 1, LEFT_CODE, UNDECIDED_CODE, RIGHT_CODE);
+      printf(
+        "Test question %d (%d for left, %d for undecided, %d for right, -1 to return, -2 to go to previous question)\n",
+        i + 1, LEFT_CODE, UNDECIDED_CODE, RIGHT_CODE
+      );
       printf(" -- Question: %s\n", test_questions[i]);
       fputs(" -- Answer code: ", stdout);
       
@@ -62,8 +68,17 @@ static inline void add_entry(QuizFile *quiz_file)
 
       if (answer == -1)
       {
+        clear_console();
         free(temp);
-        return;
+        return 1;
+      }
+
+      if (answer == -2)
+      {
+        i--;
+        if (i > -1)
+          i--;
+        break;
       }
 
       if (answer != LEFT_CODE && answer != RIGHT_CODE && answer != UNDECIDED_CODE)
@@ -78,19 +93,46 @@ static inline void add_entry(QuizFile *quiz_file)
     }
   }
 
-  for (int i = 0; i < LONG_QUESTION_COUNT; i++)
+  for (i = 0; i < LONG_QUESTION_COUNT; i++)
   {
     while (1)
     {
       clear_console();
       int answer;
-      printf("Long question %d (%d for left, %d for undecided, %d for right, -1 to return)\n", i, LEFT_CODE, UNDECIDED_CODE, RIGHT_CODE);
+      printf(
+        "Long question %d (%d for left, %d for undecided, %d for right, -1 to return, -2 to go to previous question)\n",
+        i + 1, LEFT_CODE, UNDECIDED_CODE, RIGHT_CODE
+      );
       printf(" -- Question: %s\n", long_questions[i]);
       fputs(" -- Answer code: ", stdout);
       
       if (scanf("%d", &answer) != 1)
       {
         scanf_fail();
+        continue;
+      }
+
+      if (answer == -1)
+      {
+        clear_console();
+        free(temp);
+        return 1;
+      }
+
+      if (answer == -2)
+      {
+        if (i == 0)
+        {
+          i = TEST_QUESTION_COUNT - 1;
+          goto test_question;
+        }
+        i -= 2;
+        break;
+      }
+
+      if (answer != LEFT_CODE && answer != RIGHT_CODE && answer != UNDECIDED_CODE)
+      {
+        invalid_option();
         continue;
       }
   
@@ -111,7 +153,7 @@ static inline void add_entry(QuizFile *quiz_file)
   if (scanf("%d", &option) != 1)
   {
     scanf_fail();
-    return;
+    return 1;
   }
 
   if (option == 1)
@@ -130,6 +172,7 @@ static inline void add_entry(QuizFile *quiz_file)
   quiz_file->record_count++;
   free(quiz_file->records);
   quiz_file->records = temp;
+  return 0;
 }
 
 static inline void remove_entry(QuizFile *quiz_file, int idx)
@@ -223,7 +266,9 @@ void edit_file_mode()
       
       if (option == 0)
       {
-        add_entry(&quiz_file);
+        if (add_entry(&quiz_file))
+          continue;
+
         fp = fopen(filename, "wb");
         clear_console();
 
