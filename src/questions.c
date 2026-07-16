@@ -1,10 +1,15 @@
 #include "../include/questions.h"
 
 char *test_questions[TEST_QUESTION_COUNT] = {
-  "Do you like Hitler?",
   "Тебе нравится Гитлер?"
 };
 char *long_questions[LONG_QUESTION_COUNT] = {
-  "How was your sleep?",
   "Как спалось?"
+};
+
+char *test_answers[TEST_QUESTION_COUNT * 3] = {
+  "Да", "Не знаю", "Нет"
+};
+char *long_answers[LONG_QUESTION_COUNT * 3] = {
+  "Плохо", "Нормально", "Хорошо"
 };

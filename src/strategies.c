@@ -32,6 +32,30 @@ void initialize_file_mode()
   printf(" -- Initialised file %s!\n\n", filename);
 }
 
+static void prompt_test_question(int idx)
+{
+  printf("Test question %d\n", idx + 1);
+  printf(" -- Question: %s\n -- %d: %s\n -- %d: %s\n -- %d: %s\n",
+    test_questions[idx],
+    LEFT_CODE, test_answers[idx / 3],
+    UNDECIDED_CODE, test_answers[idx / 3 + 1],
+    RIGHT_CODE, test_answers[idx / 3 + 2]
+  );
+  fputs(" -- Answer code: ", stdout);
+}
+
+static void prompt_long_question(int idx)
+{
+  printf("Long question %d\n", idx + 1);
+  printf(" -- Question: %s\n -- %d: %s\n -- %d: %s\n -- %d: %s\n",
+    long_questions[idx],
+    LEFT_CODE, long_answers[idx / 3],
+    UNDECIDED_CODE, long_answers[idx / 3 + 1],
+    RIGHT_CODE, long_answers[idx / 3 + 2]
+  );
+  fputs(" -- Answer code: ", stdout);
+}
+
 static inline int add_entry(QuizFile *quiz_file)
 {
   Record *temp = malloc((quiz_file->record_count + 1) * sizeof(Record));
@@ -53,12 +77,7 @@ test_question:
     {
       clear_console();
       int answer;
-      printf(
-        "Test question %d (%d for left, %d for undecided, %d for right, -1 to return, -2 to go to previous question)\n",
-        i + 1, LEFT_CODE, UNDECIDED_CODE, RIGHT_CODE
-      );
-      printf(" -- Question: %s\n", test_questions[i]);
-      fputs(" -- Answer code: ", stdout);
+      prompt_test_question(i);
       
       if (scanf("%d", &answer) != 1)
       {
@@ -99,12 +118,7 @@ test_question:
     {
       clear_console();
       int answer;
-      printf(
-        "Long question %d (%d for left, %d for undecided, %d for right, -1 to return, -2 to go to previous question)\n",
-        i + 1, LEFT_CODE, UNDECIDED_CODE, RIGHT_CODE
-      );
-      printf(" -- Question: %s\n", long_questions[i]);
-      fputs(" -- Answer code: ", stdout);
+      prompt_long_question(i);
       
       if (scanf("%d", &answer) != 1)
       {
@@ -313,7 +327,7 @@ void edit_file_mode()
     {
       clear_console();
       print_participants(quiz_file);
-      puts("Which participant to edit? (-1 to return)");
+      puts("\nWhich participant to edit? (-1 to return)");
       
       int participant_idx;
 
@@ -338,7 +352,7 @@ void edit_file_mode()
       clear_console();
       print_participant(quiz_file, participant_idx);
 
-      puts("Which block to edit? (0 for test, 1 for long, 2 for note, -1 to return)");
+      puts("\nWhich block to edit?\n -- 0: Test questions\n -- 1: Long questions\n -- 2: Note\n -- -1: Return");
 
       int mode, question_idx;
 
@@ -384,7 +398,7 @@ void edit_file_mode()
       }
       else
       {
-        puts("Enter the question number: (-1 to return)");
+        puts("\nEnter the question number: (-1 to return)");
   
         if (scanf("%d", &question_idx) != 1)
         {
@@ -414,12 +428,7 @@ void edit_file_mode()
   
           clear_console();
           int answer;
-          printf(
-            "Test question %d (%d for left, %d for undecided, %d for right, -1 to return)\n",
-            question_idx, LEFT_CODE, UNDECIDED_CODE, RIGHT_CODE
-          );
-          printf(" -- Question: %s\n", test_questions[question_idx - 1]);
-          fputs(" -- Answer code: ", stdout);
+          prompt_test_question(question_idx - 1);
           
           if (scanf("%d", &answer) != 1)
           {
@@ -452,12 +461,7 @@ void edit_file_mode()
           
           clear_console();
           int answer;
-          printf(
-            "Long question %d (%d for left, %d for undecided, %d for right, -1 to return)\n",
-            question_idx, LEFT_CODE, UNDECIDED_CODE, RIGHT_CODE
-          );
-          printf(" -- Question: %s\n", long_questions[question_idx - 1]);
-          fputs(" -- Answer code: ", stdout);
+          prompt_long_question(question_idx - 1);
           
           if (scanf("%d", &answer) != 1)
           {
