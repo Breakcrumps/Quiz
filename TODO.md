@@ -1,0 +1,1 @@
+- [x] Make stat mode branch into: overall stats and verdict counting by subject and by question, question list stats and subject-by subject left-to-right ratio.

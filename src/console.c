@@ -7,7 +7,7 @@ void clear_console()
   fflush(stdout);
 }
 
-void scanf_fail()
+void report_scanf_fail()
 {
   clear_console();
   puts(" -- SCAN ERROR! Couldn't scan the number.\n");
@@ -15,19 +15,19 @@ void scanf_fail()
   while ((c = getchar()) != '\n' && c != EOF);
 }
 
-void invalid_option()
+void report_invalid_option()
 {
   clear_console();
   puts(" -- Invalid option!\n");
 }
 
-void alloc_error()
+void report_alloc_error()
 {
   clear_console();
   puts(" -- MEMORY ALLOCATION ERROR! The OS failed a malloc.\n");
 }
 
-void file_error()
+void report_file_error()
 {
   clear_console();
   puts(" -- FILE OPEN ERROR! Please check if the specified file exists.\n");
