@@ -1,6 +1,12 @@
 #include "../../include/modes.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "../../include/questions.h"
+#include "../../include/console.h"
+#include "../../include/str.h"
+#include "../../include/quiz_file_funcs.h"
+#include "../../include/filename.h"
 
 static void prompt_question(int idx)
 {

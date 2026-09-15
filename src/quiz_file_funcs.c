@@ -17,7 +17,8 @@ void free_quiz_file(QuizFile quiz_file)
 
 void read_quiz_file(QuizFile *quiz_file, FILE *fp)
 {
-  fread(quiz_file, sizeof(u16), 2, fp);
+  fread(&quiz_file->record_count, sizeof(u16), 1, fp);
+  fread(&quiz_file->reject_count, sizeof(u16), 1, fp);
 
   quiz_file->records = calloc(quiz_file->record_count, sizeof(Record));
 
@@ -29,7 +30,7 @@ void read_quiz_file(QuizFile *quiz_file, FILE *fp)
 
   for (int i = 0; i < quiz_file->record_count; i++)
   {
-    fread(&quiz_file->records[i], QUESTION_ARR_SIZE, 1, fp);
+    fread(quiz_file->records[i].answers, QUESTION_ARR_SIZE, 1, fp);
 
     quiz_file->records[i].note = fread_str_dynamic(fp);
 
@@ -50,11 +51,12 @@ void read_quiz_file(QuizFile *quiz_file, FILE *fp)
 
 void write_quiz_file(QuizFile quiz_file, FILE *fp)
 {
-  fwrite(&quiz_file, sizeof(u16), 2, fp);
+  fwrite(&quiz_file.record_count, sizeof(u16), 1, fp);
+  fwrite(&quiz_file.reject_count, sizeof(u16), 1, fp);
 
   for (int i = 0; i < quiz_file.record_count; i++)
   {
-    fwrite(&quiz_file.records[i], QUESTION_ARR_SIZE, 1, fp);
+    fwrite(quiz_file.records[i].answers, QUESTION_ARR_SIZE, 1, fp);
 
     if (quiz_file.records[i].note)
       fwrite(quiz_file.records[i].note, sizeof(char), strlen(quiz_file.records[i].note) + 1, fp);

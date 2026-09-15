@@ -4,7 +4,7 @@ CPHONE = clang
 CPHONEFLAGS = -O3 -march=armv8-a -flto=auto -fno-math-errno -fno-trapping-math -s
 
 TARGET = quiz
-SRC = $(wildcard src/*)
+SRC = $(wildcard src/*.c) $(wildcard src/modes/*.c)
 
 .PHONY: phone all
 

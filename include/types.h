@@ -1,7 +1,7 @@
 typedef unsigned char u8;
 typedef unsigned short u16;
 
-#define QUESTION_COUNT 32
+#define QUESTION_COUNT 39
 #define QUESTION_ARR_SIZE ((QUESTION_COUNT + 3) / 4)
 
 typedef enum answer_code

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "../../include/console.h"
 #include "../../include/str.h"
+#include "../../include/filename.h"
 
 void set_clear_session_filename_mode(char *session_filename)
 {

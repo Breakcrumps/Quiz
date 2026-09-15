@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include "../../include/types.h"
 #include "../../include/questions.h"
+#include "../../include/console.h"
+#include "../../include/filename.h"
+#include "../../include/quiz_file_funcs.h"
 
 static inline void print_global_stats(QuizFile quiz_file)
 {
