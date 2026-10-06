@@ -1,11 +1,8 @@
-#include <stdio.h>
-
 struct quiz_file;
+struct _iobuf;
 
-void free_quiz_file(struct quiz_file quiz_file);
-void read_quiz_file(struct quiz_file *quiz_file, FILE *fp);
-void write_quiz_file(struct quiz_file quiz_file, FILE *fp);
-void print_participant(struct quiz_file quiz_file, int idx);
-void print_participants(struct quiz_file quiz_file);
+void read_quiz_file(struct quiz_file *quiz_file, struct _iobuf *fp);
 void print_quiz_file(struct quiz_file quiz_file, const char filename[]);
-void print_quiz_file_no_question_texts(struct quiz_file quiz_file, const char filename[]);
+void print_global_stats(struct quiz_file quiz_file);
+void print_per_question_stats(struct quiz_file quiz_file);
+void print_per_participant_stats(struct quiz_file quiz_file);

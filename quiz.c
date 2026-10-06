@@ -1,36 +1,37 @@
-#include "include/filename.h"
-#include "include/modes.h"
 #include "include/console.h"
-#include "include/str.h"
+#include "include/quiz_file_funcs.h"
+#include "include/types.h"
 #include <locale.h>
+#include <stdio.h>
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
-int main()
+int main(int argc, char *argv[])
 {
+  if (argc < 2)
+  {
+    puts("Usage: quiz.exe <quiz file>");
+    return 0;
+  }
+
+  FILE *init_fp = fopen(argv[1], "rb");
+
+  if (!init_fp)
+  {
+    report_file_error();
+    return 0;
+  }
+
+  fclose(init_fp);
+  
   #ifdef _WIN32
   SetConsoleOutputCP(CP_UTF8);
   SetConsoleCP(CP_UTF8);
   #endif
 
   setlocale(LC_ALL, ".UTF8");
-
-  FILE *fp = fopen("filename.dat", "rb");
-
-  if (!fp)
-  {
-    session_filename[0] = '\0';
-  }
-  else
-  {
-    fseek(fp, 0, SEEK_END);
-    long file_size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    fread(session_filename, sizeof(char), file_size, fp);
-    fclose(fp);
-  }
   
   clear_console();
   puts(
@@ -41,12 +42,14 @@ int main()
 
   while (1)
   {
-    puts("\t---  OPTIONS ---\n -- 1. Initialize quiz file.\n -- 2. Edit quiz file. (OPEN SUBMENU)\n -- 3. Stats.");
-
-    if (session_filename[0])
-      printf(" -- -1. Clear session filename (%s).\n\n", session_filename);
-    else
-      puts(" -- -1. Set session filename.\n\n");
+    printf(" <<<  File: %s  >>>\n\n", argv[1]);
+    puts(
+      "\t---  OPTIONS ---\n"
+      " -- 1. Check file contents.\n"
+      " -- 2. Stats accumulated from all questions and stats accumulated from every participant.\n"
+      " -- 3. Per-question stats.\n"
+      " -- 4. Per-participant stats."
+    );
     
     int option;
   
@@ -57,21 +60,34 @@ int main()
       continue;
     }
 
+    FILE *fp = fopen(argv[1], "rb");
+
+    if (!fp)
+    {
+      report_file_error();
+      return 0;
+    }
+
+    QuizFile quiz_file;
+    read_quiz_file(&quiz_file, fp);
+    fclose(fp);
+
     if (option == 1)
     {
-      initialize_file_mode();
+      clear_console();
+      print_quiz_file(quiz_file, argv[1]);
     }
     else if (option == 2)
     {
-      edit_file_mode();
+      print_global_stats(quiz_file);
     }
     else if (option == 3)
     {
-      stat_mode();
+      print_per_question_stats(quiz_file);
     }
-    else if (option == -1)
+    else if (option == 4)
     {
-      set_clear_session_filename_mode(session_filename);
+      print_per_participant_stats(quiz_file);
     }
     else
     {
