@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 {
   if (argc < 2)
   {
-    puts("Usage: quiz.exe <quiz file>");
+    printf("Usage: %s <quiz file>\n", argv[0]);
     return 0;
   }
 

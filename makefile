@@ -1,10 +1,10 @@
 CC = gcc
-CFLAGS = -O3 -march=x86-64-v3 -flto=auto -fno-math-errno -fno-trapping-math -s
+CFLAGS = -O3 -march=native -flto=auto -fno-math-errno -fno-trapping-math -s
 CPHONE = clang
-CPHONEFLAGS = -O3 -march=armv8-a -flto=auto -fno-math-errno -fno-trapping-math -s
 
 TARGET = quiz
-SRC = $(wildcard src/*.c) $(wildcard src/modes/*.c)
+TRANSLATOR = translator
+SRC = $(wildcard src/*.c)
 
 .PHONY: phone all
 
@@ -12,5 +12,7 @@ all: $(TARGET)
 
 $(TARGET): $(SRC) quiz.c
 	$(CC) $(CFLAGS) -fwhole-program $^ -o $(TARGET)
+$(TRANSLATOR): $(SRC) translator.c
+	$(CC) $(CFLAGS) -fwhole-program $^ -o $(TRANSLATOR)
 phone: $(SRC) quiz.c
-	$(CPHONE) $(CPHONEFLAGS) $^ -o $(TARGET)
+	$(CPHONE) $(CFLAGS) $^ -o $(TARGET)
