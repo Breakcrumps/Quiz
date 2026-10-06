@@ -16,3 +16,5 @@ $(TRANSLATOR): $(SRC) translator.c
 	$(CC) $(CFLAGS) -fwhole-program $^ -o $(TRANSLATOR)
 phone: $(SRC) quiz.c
 	$(CPHONE) $(CFLAGS) $^ -o $(TARGET)
+clean:
+	del /q /f *.exe
