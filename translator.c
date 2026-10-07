@@ -1,6 +1,7 @@
 #include "include/types.h"
 #include "include/questions.h"
 #include "include/console.h"
+#include "include/quiz_file_funcs.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,23 +25,20 @@ static inline void pack_answers(char row[QUESTION_COUNT][128], unsigned char pac
   {
     if (i == QUESTION_COUNT - 2)
     {
-      int byte_idx = i >> 3, bit_shift = i & 0x7;
-      int byte_idx1 = (i + 1) >> 3, bit_shift1 = (i + 1) & 0x7;
-
       if (strstr(row[i], "Нет"))
       {
-        packed[byte_idx] |= (RIGHT_CODE << bit_shift);
-        packed[byte_idx1] |= (RIGHT_CODE << bit_shift1);
+        packed[byte_idx(i)] |= (RIGHT_CODE << byte_pos(i));
+        packed[byte_idx(i + 1)] |= (RIGHT_CODE << byte_pos(i + 1));
       }
       else if (strstr(row[i], "оно"))
       {
-        packed[byte_idx] |= (RIGHT_CODE << bit_shift);
-        packed[byte_idx1] |= (LEFT_CODE << bit_shift1);
+        packed[byte_idx(i)] |= (RIGHT_CODE << byte_pos(i));
+        packed[byte_idx(i + 1)] |= (LEFT_CODE << byte_pos(i + 1));
       }
       else
       {
-        packed[byte_idx] |= (LEFT_CODE << bit_shift);
-        packed[byte_idx1] |= (LEFT_CODE << bit_shift1);
+        packed[byte_idx(i)] |= (LEFT_CODE << byte_pos(i));
+        packed[byte_idx(i + 1)] |= (LEFT_CODE << byte_pos(i + 1));
       }
       break;
     }
@@ -53,9 +51,7 @@ static inline void pack_answers(char row[QUESTION_COUNT][128], unsigned char pac
       : !strcmp(row[i], right_match) ? RIGHT_CODE
       : 0;
 
-    int byte_idx = i >> 3;
-    int bit_shift = i & 0x7;
-    packed[byte_idx] |= code << bit_shift;
+    packed[byte_idx(i)] |= code << byte_pos(i);
   }
 }
 

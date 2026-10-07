@@ -5,6 +5,16 @@
 #include "../include/console.h"
 #include "../include/questions.h"
 
+int byte_idx(int question_idx)
+{
+  return question_idx >> 3;
+}
+
+int byte_pos(int question_idx)
+{
+  return question_idx & 0x7;
+}
+
 static inline void free_quiz_file(QuizFile quiz_file)
 {
   for (int i = 0; i < quiz_file.record_count; i++)
@@ -55,7 +65,7 @@ static inline void print_participant(QuizFile quiz_file, int idx)
 
   for (u16 j = 0; j < QUESTION_COUNT; j++)
   {
-    int answer_code = (quiz_file.records[idx - 1].answers[j >> 3] >> (j & 0x7)) & 0x1;
+    int answer_code = (quiz_file.records[idx - 1].answers[byte_idx(j)] >> byte_pos(j)) & 0x1;
     char *comment = (
       answer_code == LEFT_CODE ? "Left"
       : answer_code == RIGHT_CODE ? "Right"
@@ -98,7 +108,7 @@ void print_global_stats(QuizFile quiz_file)
     
     for (int j = 0; j < QUESTION_COUNT; j++)
     {
-      int ans_code = (quiz_file.records[i].answers[j >> 3] >> (j & 0x7)) & 0x1;
+      int ans_code = (quiz_file.records[i].answers[byte_idx(j)] >> byte_pos(j)) & 0x1;
 
       if (ans_code == RIGHT_CODE)
         personal_right_q++;
@@ -182,7 +192,7 @@ void print_per_question_stats(QuizFile quiz_file)
 
     for (int i = 0; i < quiz_file.record_count; i++)
     {
-      int ans_code = (quiz_file.records[i].answers[j >> 3] >> (j & 0x7)) & 0x1;
+      int ans_code = (quiz_file.records[i].answers[byte_idx(j)] >> byte_pos(j)) & 0x1;
       if (ans_code == LEFT_CODE)
         left_votes++;
       else if (ans_code == RIGHT_CODE)
@@ -227,7 +237,7 @@ void print_per_participant_stats(QuizFile quiz_file)
     
     for (int j = 0; j < QUESTION_COUNT; j++)
     {
-      int ans_code = (quiz_file.records[i].answers[j >> 3] >> (j & 0x7)) & 0x1;
+      int ans_code = (quiz_file.records[i].answers[byte_idx(j)] >> byte_pos(j)) & 0x1;
       if (ans_code == LEFT_CODE)
         personal_left_q++;
       else if (ans_code == RIGHT_CODE)
