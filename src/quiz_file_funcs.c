@@ -41,7 +41,7 @@ void read_quiz_file(QuizFile *quiz_file, FILE *fp)
       return;
     }
     
-    if (quiz_file->records[i].note[0] == '\0')
+    if (!quiz_file->records[i].note[0])
     {
       free(quiz_file->records[i].note);
       quiz_file->records[i].note = NULL;
@@ -55,7 +55,7 @@ static inline void print_participant(QuizFile quiz_file, int idx)
 
   for (u16 j = 0; j < QUESTION_COUNT; j++)
   {
-    int answer_code = (quiz_file.records[idx - 1].answers[j >> 2] >> ((j & 0x3) << 1)) & 0x3;
+    int answer_code = (quiz_file.records[idx - 1].answers[j >> 3] >> (j & 0x7)) & 0x1;
     char *comment = (
       answer_code == LEFT_CODE ? "Left"
       : answer_code == RIGHT_CODE ? "Right"
@@ -77,7 +77,7 @@ void print_quiz_file(QuizFile quiz_file, const char filename[])
   printf("%hu\n", quiz_file.record_count);
   fputs(" -- Reject count: ", stdout);
   printf("%hu\n", quiz_file.reject_count);
-  for (int i = 1 ; i <= quiz_file.record_count; i++)
+  for (int i = 1; i <= quiz_file.record_count; i++)
   {
     print_participant(quiz_file, i);
     puts("\n");
@@ -98,7 +98,7 @@ void print_global_stats(QuizFile quiz_file)
     
     for (int j = 0; j < QUESTION_COUNT; j++)
     {
-      int ans_code = (quiz_file.records[i].answers[j >> 2] >> ((j & 0x3) << 1)) & 0x3;
+      int ans_code = (quiz_file.records[i].answers[j >> 3] >> (j & 0x7)) & 0x1;
 
       if (ans_code == RIGHT_CODE)
         personal_right_q++;
@@ -182,7 +182,7 @@ void print_per_question_stats(QuizFile quiz_file)
 
     for (int i = 0; i < quiz_file.record_count; i++)
     {
-      int ans_code = (quiz_file.records[i].answers[j >> 2] >> ((j & 0x3) << 1)) & 0x3;
+      int ans_code = (quiz_file.records[i].answers[j >> 3] >> (j & 0x7)) & 0x1;
       if (ans_code == LEFT_CODE)
         left_votes++;
       else if (ans_code == RIGHT_CODE)
@@ -227,7 +227,7 @@ void print_per_participant_stats(QuizFile quiz_file)
     
     for (int j = 0; j < QUESTION_COUNT; j++)
     {
-      int ans_code = (quiz_file.records[i].answers[j >> 2] >> ((j & 0x3) << 1)) & 0x3;
+      int ans_code = (quiz_file.records[i].answers[j >> 3] >> (j & 0x7)) & 0x1;
       if (ans_code == LEFT_CODE)
         personal_left_q++;
       else if (ans_code == RIGHT_CODE)

@@ -2,12 +2,12 @@ typedef unsigned char u8;
 typedef unsigned short u16;
 
 #define QUESTION_COUNT 39
-#define QUESTION_ARR_SIZE ((QUESTION_COUNT + 3) / 4)
+#define QUESTION_ARR_SIZE ((QUESTION_COUNT + 7) / 8)
 
 typedef enum answer_code
 {
-  LEFT_CODE = 1,
-  RIGHT_CODE = 2
+  LEFT_CODE = 0,
+  RIGHT_CODE = 1
 } AnswerCode;
 
 typedef struct record

@@ -1,4 +1,4 @@
 #include "types.h"
 
 extern char *questions[QUESTION_COUNT];
-extern char *answers[QUESTION_COUNT * 2];
+extern char *answers[QUESTION_COUNT << 1];

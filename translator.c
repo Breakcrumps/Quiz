@@ -4,6 +4,11 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <locale.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 typedef struct extract
 {
@@ -19,8 +24,8 @@ static inline void pack_answers(char row[QUESTION_COUNT][128], unsigned char pac
   {
     if (i == QUESTION_COUNT - 2)
     {
-      int byte_idx = i >> 2, bit_shift = (i % 4) << 1;
-      int byte_idx1 = (i + 1) >> 2, bit_shift1 = ((i + 1) % 4) << 1;
+      int byte_idx = i >> 3, bit_shift = i & 0x7;
+      int byte_idx1 = (i + 1) >> 3, bit_shift1 = (i + 1) & 0x7;
 
       if (strstr(row[i], "Нет"))
       {
@@ -40,22 +45,29 @@ static inline void pack_answers(char row[QUESTION_COUNT][128], unsigned char pac
       break;
     }
 
-    const char *left_match = answers[2 * i];
-    const char *right_match = answers[2 * i + 1];
+    const char *left_match = answers[i << 1];
+    const char *right_match = answers[(i << 1) + 1];
 
     int code = 
       !strcmp(row[i], left_match) ? LEFT_CODE
       : !strcmp(row[i], right_match) ? RIGHT_CODE
       : 0;
 
-    int byte_idx = i >> 2;
-    int bit_shift = (i % 4) << 1;
+    int byte_idx = i >> 3;
+    int bit_shift = i & 0x7;
     packed[byte_idx] |= code << bit_shift;
   }
 }
 
 int main(int argc, char *argv[])
 {
+  #ifdef _WIN32
+  SetConsoleOutputCP(CP_UTF8);
+  SetConsoleCP(CP_UTF8);
+  #endif
+
+  setlocale(LC_ALL, ".UTF8");
+  
   if (argc < 3)
   {
     printf("Usage: %s <input_tsv> <output_binary>\n", argv[0]);
